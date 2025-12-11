@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Red vs Blue Proxmox Lab – Capstone Reflection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-elevated: #020617;
+      --card: #020617;
+      --card-border: #1f2937;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.12);
+      --accent-strong: rgba(56, 189, 248, 0.25);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --danger: #f97373;
+      --shadow-soft: 0 18px 45px rgba(0,0,0,0.85);
+      --radius-lg: 22px;
+      --radius-pill: 999px;
+      --blur: 26px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        sans-serif;
+      background: radial-gradient(circle at top left, #0f172a 0, #020617 48%, #000 100%);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(var(--blur));
+      background: radial-gradient(circle at top, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.96));
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .nav {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0.9rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .nav-title {
+      font-size: 0.98rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+
+    .nav-links a {
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-pill);
+      transition: all 0.18s ease;
+    }
+
+    .nav-links a:hover {
+      color: #f9fafb;
+      background: rgba(15, 23, 42, 0.9);
+      box-shadow: 0 0 0 1px rgba(51, 65, 85, 0.9);
+    }
+
+    .nav-links a.primary-link {
+      background: linear-gradient(to right, #0ea5e9, #22c55e);
+      color: #020617;
+      font-weight: 600;
+      box-shadow: 0 14px 40px rgba(34, 197, 94, 0.35);
+    }
+
+    .nav-links a.primary-link:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 45px rgba(34, 197, 94, 0.45);
+    }
+
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 1.75rem 1.5rem 3.75rem;
+    }
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 3.2fr) minmax(0, 2.8fr);
+      gap: 2.4rem;
+      align-items: center;
+      margin-bottom: 2.75rem;
+    }
+
+    .hero-left > .chip {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      padding: 0.35rem 0.9rem;
+      border-radius: var(--radius-pill);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(56, 189, 248, 0.5);
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .chip-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.3);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.1rem, 2.7vw + 1.6rem, 2.7rem);
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(to right, #e5e7eb, #38bdf8);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .hero-subtitle {
+      color: var(--muted);
+      font-size: 0.98rem;
+      max-width: 36rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 1.4rem;
+    }
+
+    .hero-meta span {
+      padding: 0.32rem 0.7rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(75, 85, 99, 0.8);
+      background: rgba(15, 23, 42, 0.85);
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .hero-buttons a.btn {
+      font-size: 0.9rem;
+      padding: 0.65rem 1.2rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.18s ease;
+    }
+
+    .hero-buttons a.btn.primary {
+      border-color: transparent;
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      color: #020617;
+      font-weight: 600;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+    }
+
+    .hero-buttons a.btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 55px rgba(15, 23, 42, 0.9);
+    }
+
+    .hero-buttons a.btn.secondary:hover {
+      border-color: rgba(148, 163, 184, 1);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .hero-right {
+      position: relative;
+    }
+
+    .hero-card {
+      position: relative;
+      padding: 1.2rem 1.2rem 1rem;
+      border-radius: 26px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.17), transparent 55%),
+        radial-gradient(circle at bottom, rgba(30, 64, 175, 0.7), rgba(15, 23, 42, 0.98));
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+
+    .hero-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.9rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .hero-card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+
+    .hero-card-body {
+      border-radius: 18px;
+      padding: 0.7rem 0.9rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(51, 65, 85, 0.9);
+    }
+
+    .hero-card-body p {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .hero-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.75rem;
+    }
+
+    .hero-card-tags span {
+      font-size: 0.7rem;
+      padding: 0.22rem 0.7rem;
+      border-radius: var(--radius-pill);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 1);
+      color: #9ca3af;
+    }
+
+    /* Sections */
+    .section {
+      margin-bottom: 2.5rem;
+    }
+
+    .section-header {
+      margin-bottom: 0.7rem;
+    }
+
+    .kicker {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.45rem;
+    }
+
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: baseline;
+    }
+
+    .section-title-row h2 {
+      font-size: 1.1rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .section-title-row span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .section-body {
+      display: grid;
+      gap: 1.2rem;
+    }
+
+    .two-column {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.25fr);
+    }
+
+    .card {
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--card-border);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.98));
+      box-shadow: var(--shadow-soft);
+      padding: 1.1rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 60%);
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .card h3 {
+      font-size: 0.98rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    ul {
+      padding-left: 1.1rem;
+      margin-top: 0.4rem;
+    }
+
+    li {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 0.3rem;
+    }
+
+    /* DOCS SECTION WITH TABS + EXPAND BUTTON */
+    .docs-section {
+      margin-top: 2.2rem;
+    }
+
+    .docs-section .section-body {
+      gap: 1.6rem;
+    }
+
+    .docs-intro {
+      font-size: 0.9rem;
+      color: var(--muted);
+      max-width: 60rem;
+    }
+
+    .docs-controls {
+      margin-top: 0.6rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .docs-toggle {
+      font-size: 0.8rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: rgba(15, 23, 42, 0.95);
+      color: #e5e7eb;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.18s ease;
+    }
+
+    .docs-toggle:hover {
+      border-color: rgba(148, 163, 184, 1);
+      background: rgba(15, 23, 42, 1);
+      transform: translateY(-1px);
+    }
+
+    .docs-grid-outer {
+      margin-top: 0.7rem;
+      transition: all 0.25s ease;
+    }
+
+    .docs-viewer-card {
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      background: radial-gradient(circle at top left, var(--accent-soft), rgba(15, 23, 42, 0.96));
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95);
+      padding: 0.9rem 1.1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .docs-tab-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      border-bottom: 1px solid rgba(55, 65, 81, 0.9);
+      padding-bottom: 0.4rem;
+    }
+
+    .doc-tab {
+      font-size: 0.82rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .doc-tab:hover {
+      border-color: rgba(148, 163, 184, 0.8);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+    }
+
+    .doc-tab.active {
+      border-color: rgba(56, 189, 248, 0.9);
+      background: radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), rgba(15, 23, 42, 0.95));
+      color: #e5e7eb;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.9);
+    }
+
+    .docs-viewer {
+      border-radius: 20px;
+      border: 1px solid rgba(30, 64, 175, 0.9);
+      overflow: hidden;
+      background: #020617;
+      height: 520px; /* default medium size */
+      transition: height 0.25s ease;
+    }
+
+    .docs-grid-outer.expanded .docs-viewer {
+      height: 760px; /* expanded size */
+    }
+
+    .docs-viewer iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .docs-caption {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding-inline: 0.1rem;
+      margin-top: 0.2rem;
+    }
+
+    /* GALLERY */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.1rem;
+      margin-top: 0.2rem;
+    }
+
+    .gallery-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      background: radial-gradient(circle at top, #0f172a, #020617);
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+
+    .gallery-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.7);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.9);
+    }
+
+    .gallery-thumb {
+      position: relative;
+      overflow: hidden;
+      max-height: 190px;
+    }
+
+    .gallery-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.25s ease;
+    }
+
+    .gallery-card:hover .gallery-thumb img {
+      transform: scale(1.05);
+    }
+
+    .gallery-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 40%);
+      display: flex;
+      align-items: flex-end;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.8rem;
+      color: #e5e7eb;
+    }
+
+    .gallery-text-main {
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+
+    .gallery-text-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.15rem;
+    }
+
+    .gallery-body {
+      padding: 0.7rem 0.8rem 0.75rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .gallery-body p {
+      margin-bottom: 0.3rem;
+    }
+
+    .gallery-detail {
+      display: none;
+      font-size: 0.76rem;
+      color: #9ca3af;
+    }
+
+    .gallery-card:hover .gallery-detail {
+      display: block;
+    }
+
+    .gallery-fullscreen {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.97);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 80;
+      padding: 1.5rem;
+    }
+
+    .gallery-fullscreen.open {
+      display: flex;
+    }
+
+    .gallery-fullscreen-inner {
+      max-width: 1100px;
+      width: 100%;
+      max-height: 90vh;
+      border-radius: 22px;
+      background: radial-gradient(circle at top, #020617, #020617);
+      border: 1px solid rgba(148, 163, 184, 0.7);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2.1fr);
+      gap: 0;
+    }
+
+    .gallery-fullscreen-img {
+      background: #000;
+    }
+
+    .gallery-fullscreen-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #000;
+    }
+
+    .gallery-fullscreen-meta {
+      padding: 1.1rem 1.3rem;
+      font-size: 0.9rem;
+      color: #d1d5db;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 1), #020617);
+    }
+
+    .gallery-fullscreen-meta h3 {
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .gallery-fullscreen-meta p {
+      font-size: 0.86rem;
+      color: #9ca3af;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.16rem 0.55rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.65);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .fullscreen-close {
+      position: absolute;
+      top: 0.9rem;
+      right: 1.2rem;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(148, 163, 184, 0.8);
+      padding: 0.25rem 0.65rem;
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.96);
+      cursor: pointer;
+      color: #e5e7eb;
+    }
+
+    footer {
+      border-top: 1px solid rgba(30, 64, 175, 0.6);
+      margin-top: 2.85rem;
+      padding-top: 1.4rem;
+      padding-bottom: 0.9rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    footer a {
+      color: #a5b4fc;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .hero-right {
+        order: -1;
+      }
+      .gallery-fullscreen-inner {
+        grid-template-columns: minmax(0, 1fr);
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 640px) {
+      header {
+        position: static;
+      }
+      .nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+      }
+      main {
+        padding-inline: 1.05rem;
+      }
+      .card {
+        padding: 1rem;
+      }
+      .docs-viewer {
+        height: 420px;
+      }
+      .docs-grid-outer.expanded .docs-viewer {
+        height: 640px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header>
+      <nav class="nav">
+        <div class="nav-left">
+          <div>
+            <div class="nav-title">Red vs Blue Capstone Project Reflection</div>
+            <div style="font-size:0.78rem;color:#9ca3af;margin-top:0.15rem;">
+            </div>
+          </div>
+        </div>
+        <div class="nav-links">
+          <a href="#summary">Overview</a>
+          <a href="#techniques">Techniques</a>
+          <a href="#lessons">Lessons</a>
+          <a href="#docs">Docs</a>
+          <a href="#gallery">Visuals</a>
+          <a href="https://www.linkedin.com/in/dheeraj-kumar-6528801a7" target="_blank" class="primary-link">Connect on LinkedIn</a>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero" id="top">
+        <div class="hero-left">
+          <div class="chip">
+            <span class="chip-dot"></span>
+            Red vs Blue Cloud Lab • Proxmox • Wazuh • Sysmon
+          </div>
+          <h1>
+            Red vs Blue Lab: <span>Capstone Reflection</span>
+          </h1>
+          <p class="hero-subtitle">
+            This reflection summarizes my role as a purple team member in a semester-long Red vs Blue
+            capstone. Each team in the course owned a dedicated Proxmox environment to defend as the blue
+            team, while our red team responsibilities focused on conducting controlled attacks against
+            other teams’ environments. We then used Wazuh and Sysmon to reason about how similar behavior
+            would appear in our own monitored network.
+          </p>
+          <div class="hero-meta">
+            <span>Role: Purple Team – Red and Blue Collaboration</span>
+            <span>Focus: Network Defense, Detection Engineering, Brute-force Analysis</span>
+          </div>
+          <div class="hero-buttons">
+            <a href="#summary" class="btn primary">Read the Project Narrative</a>
+            <a href="#docs" class="btn secondary">Open Slides & Reflection (View Only)</a>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="hero-card">
+            <div class="hero-card-header">
+              <div>
+                <div class="hero-card-title">Lab at a Glance</div>
+                <div style="font-size:0.76rem;color:var(--muted);">
+                  Proxmox • VyOS • pfSense • Ubuntu • Windows 10 • Wazuh • Sysmon
+                </div>
+              </div>
+              <div style="font-size:0.75rem;color:var(--muted);text-align:right;">
+                Isolated mini-enterprise defended by our blue team and informed by red-team attacks on peer environments.
+              </div>
+            </div>
+            <div class="hero-card-body">
+              <p>
+                As a team, we configured a routed Proxmox environment, hardened a Windows 10 endpoint,
+                and connected it to a Wazuh SIEM running on Ubuntu. In parallel, our red-team duties
+                involved attacking <strong>other student teams’ environments</strong> - never our own - using
+                enumeration and authentication attacks. My primary contribution was to help connect those
+                offensive techniques to how they would manifest in Sysmon and Wazuh telemetry on the
+                environment we defended.
+              </p>
+              <div class="hero-card-tags">
+                <span>Proxmox Enterprise Lab</span>
+                <span>Detection-Driven Design</span>
+                <span>Purple Team Skill Development</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUMMARY -->
+      <section class="section" id="summary">
+        <div class="section-header">
+          <div class="kicker">Project Summary</div>
+          <div class="section-title-row">
+            <h2>Red vs Blue Capstone</h2>
+            <span>Architecture, objectives, and personal scope</span>
+          </div>
+        </div>
+        <div class="section-body two-column">
+          <article class="card">
+            <div class="card-content">
+              <h3>Overview of the Lab Environment</h3>
+              <p>
+                The capstone project was designed to simulate a small enterprise network using
+                virtual infrastructure. Our team deployed Proxmox as the hypervisor, a VyOS router to manage
+                WAN/LAN routing, pfSense as the perimeter firewall, an Ubuntu server hosting the Wazuh
+                Manager and indexer, and a Windows 10 workstation as the primary monitored endpoint.
+                The network was intentionally segmented and isolated to reduce risk while still allowing
+                realistic routing, firewall, and logging scenarios.
+              </p>
+              <p style="margin-top:0.5rem;">
+                Within this structure, <strong>every team acted as both attacker and defender</strong>.
+                As the blue side, we were responsible for securing and monitoring our own Proxmox-based
+                environment. As part of the course red team, we participated in controlled exercises
+                that targeted other teams’ environments - not our own - with the goal of simulating realistic
+                adversary behavior under faculty supervision.
+              </p>
+              <p style="margin-top:0.5rem;">
+                After observing the results of these attacks, we treated them as case studies and asked:
+                “If the same techniques were used against our Windows 10 host, what would Sysmon record,
+                and which Wazuh rules should alert?” This closed the loop between offensive activity and
+                defensive visibility.
+              </p>
+            </div>
+          </article>
+
+          <aside class="card">
+            <div class="card-content">
+              <h3>My Personal Focus as a Purple Teamer</h3>
+              <p>
+                My role in the capstone was intentionally “purple”: I contributed to selected red-team
+                tasks while also helping interpret and strengthen blue-team defenses for our own lab.
+                I was not the primary operator for every exploit or configuration, but I concentrated
+                on several key areas:
+              </p>
+              <ul>
+                <li>Supporting SMB brute-force testing and login failure analysis during attacks on other teams’ environments.</li>
+                <li>Reviewing FTP access to a challenge server and examining files delivered to the attacker.</li>
+                <li>Helping tune and interpret Wazuh alerts tied to Sysmon Event IDs 1, 3, 11, and 13.</li>
+                <li>Contributing to hardening work on the Windows endpoint and validating that changes
+                    produced the expected logging patterns in our own environment.</li>
+              </ul>
+              <p style="margin-top:0.4rem;">
+                This blend of responsibilities gave me a practical purple-team experience: I was able to
+                understand the attacker’s workflow against peer teams while simultaneously considering
+                exactly what defenders must be able to see in dashboards and logs to protect our own
+                environment.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- TECHNIQUES -->
+      <section class="section" id="techniques">
+        <div class="section-header">
+          <div class="kicker">Key Techniques</div>
+          <div class="section-title-row">
+            <h2>Attack and Defense Techniques We Implemented</h2>
+            <span>Selected examples from the broader workflow</span>
+          </div>
+        </div>
+        <div class="section-body two-column">
+          <article class="card">
+            <div class="card-content">
+              <h3>Offensive Techniques We Practiced Against Other Teams</h3>
+              <p>
+                In the red-team portion of the course, we operated against <strong>other student teams’ lab
+                environments</strong> rather than our own. This structure allowed everyone to experience
+                being attacked and defended without self-targeting. We used that space to practice attack
+                chains that map to common adversary behaviors. While I did not execute every individual
+                step, we collectively worked through techniques such as:
+              </p>
+              <ul>
+                <li>
+                  <strong>SMB brute-force attempts:</strong> We used tools such as Metasploit and
+                  CrackMapExec to send repeated authentication attempts against SMB services on peer
+                  environments, observing <code>STATUS_LOGON_FAILURE</code> responses and tracking how
+                  quickly account lockout thresholds might be reached in a real environment.
+                </li>
+                <li>
+                  <strong>FTP enumeration and retrieval:</strong> We authenticated to a FileZilla FTP
+                  server hosted by another team, identified accessible directories, and downloaded a
+                  challenge archive and the <code>john.txt</code> wordlist to support subsequent
+                  password-cracking exercises.
+                </li>
+                <li>
+                  <strong>RPC and SMB enumeration:</strong> Using tools like <code>rpcclient</code>,
+                  <code>smbmap</code>, and Impacket’s <code>smbclient.py</code>, we enumerated users,
+                  shares, and permissions in target environments, highlighting how misconfigurations can
+                  inadvertently expose sensitive information.
+                </li>
+                <li>
+                  <strong>Web service verification:</strong> We confirmed that target systems were hosting
+                  IIS web servers on HTTP and compared that exposure with filtered or blocked ports such
+                  as 22 and 443, reinforcing the importance of deliberate network service design.
+                </li>
+              </ul>
+              <p style="margin-top:0.4rem;">
+                Because these attacks were directed at other teams, they created a realistic adversarial
+                pressure without jeopardizing our own lab. At the same time, they provided rich examples
+                we later mapped back to our Wazuh and Sysmon telemetry: if this happened to us, which
+                events and rules would we expect to see?
+              </p>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-content">
+              <h3>Defensive Techniques We Applied in Our Environment</h3>
+              <p>
+                The defensive side of the project focused on our responsibility as the blue team for
+                <strong>our own Proxmox environment</strong>. We concentrated on building visibility,
+                validating telemetry, and connecting raw events to higher-level security narratives.
+                Key techniques included:
+              </p>
+              <ul>
+                <li>
+                  <strong>Endpoint onboarding and grouping:</strong> We deployed the Wazuh agent on
+                  our Windows 10 system and confirmed that the host appeared in the Endpoints view under
+                  the <code>windows-sysmon</code> group, providing confidence that telemetry was flowing.
+                </li>
+                <li>
+                  <strong>Sysmon with a curated configuration:</strong> We installed Sysmon using the
+                  SwiftOnSecurity configuration so that process creation, file writes, registry edits,
+                  and network connections were captured with useful detail rather than noise.
+                </li>
+                <li>
+                  <strong>Rule-based alerting in Wazuh:</strong> We examined how Sysmon events were
+                  translated into Wazuh rules, including examples such as:
+                  <ul>
+                    <li><strong>Rule 92213:</strong> Executable files dropped in directories commonly abused by malware.</li>
+                    <li><strong>Rule 92307:</strong> Registry evidence of new service creation.</li>
+                    <li><strong>Rule 61605:</strong> Sysmon Event ID 3, signaling outbound network connections.</li>
+                  </ul>
+                </li>
+                <li>
+                  <strong>Mapping to MITRE ATT&amp;CK:</strong> We used the Wazuh MITRE view to align
+                  alerts with tactics such as Command and Control, Privilege Escalation, and Defense
+                  Evasion, which helped us reason about attacker objectives rather than isolated events.
+                </li>
+              </ul>
+              <p style="margin-top:0.4rem;">
+                This defensive work demonstrated that a properly configured endpoint and SIEM can convert
+                low-level system activity into actionable detections that security analysts can investigate
+                under time pressure - especially when informed by firsthand experience launching attacks
+                against other teams.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- LESSONS / TEAMWORK / CAREER -->
+      <section class="section" id="lessons">
+        <div class="section-header">
+          <div class="kicker">Lessons, Challenges, and Career Impact</div>
+          <div class="section-title-row">
+            <h2>Reflections on Learning and Teamwork</h2>
+            <span>Technical growth and professional development</span>
+          </div>
+        </div>
+        <div class="section-body two-column">
+          <article class="card">
+            <div class="card-content">
+              <h3>Lessons Learned and Challenges Faced</h3>
+              <p>
+                One of the most significant lessons was how sensitive an integrated lab is to
+                configuration errors. A single incorrect gateway, a missing NAT rule, or an overly
+                restrictive firewall policy in pfSense could completely disrupt communication between
+                Proxmox, VyOS, Ubuntu, and Windows. Rather than treating these as minor inconveniences,
+                we treated them as realistic troubleshooting scenarios that mirrored production
+                network engineering work.
+              </p>
+              <p style="margin-top:0.4rem;">
+                Another key realization was that visibility is not automatic. Installing Sysmon or a
+                Wazuh agent does not guarantee effective detection. We had to verify that events were
+                actually collected, that rules were firing as expected, and that alerts mapped clearly
+                to attacker behaviors. This reinforced the importance of end-to-end validation rather
+                than assuming that a nominally “deployed” tool is providing adequate coverage.
+              </p>
+              <p style="margin-top:0.4rem;">
+                Finally, working across both offensive examples against other teams and defensive analysis
+                in our own environment highlighted the value of thinking holistically. Understanding how
+                an attacker chains reconnaissance, exploitation, and persistence steps together made it
+                much easier to interpret alerts in context and to distinguish meaningful signals from
+                background noise.
+              </p>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-content">
+              <h3>Teamwork, Decision-Making, and Career Development</h3>
+              <p>
+                Our team relied heavily on collaborative decision-making. One member focused on VyOS
+                routing, another on pfSense firewall tuning, others on Wazuh configuration and
+                documentation. We had to decide where to allocate time - whether to invest effort in
+                troubleshooting connectivity, refining logging, or exploring additional attack paths
+                against peer environments. This reflected the type of prioritization that security
+                operations centers perform when not every task can be completed at once.
+              </p>
+              <p style="margin-top:0.4rem;">
+                As a purple team participant, I gained experience translating offensive techniques into
+                concrete defensive questions: if a similar brute-force or malware drop occurred on our
+                Windows host, which Sysmon Event IDs would be triggered, and which Wazuh rules should
+                highlight that behavior? Developing this habit of “thinking like an attacker, but acting
+                like a defender” is directly relevant to roles in security operations, detection
+                engineering, and incident response.
+              </p>
+              <p style="margin-top:0.4rem;">
+                <strong>In terms of career development,</strong> this project gives me more than a list
+                of tools on a résumé. It provides a cohesive story: I helped design and operate an
+                isolated Proxmox environment, participated in offensive exercises against other teams’
+                environments, and used Wazuh and Sysmon data to reason about detections and hardening
+                in our own lab. This experience strengthens my trajectory toward a purple-team or
+                blue-team position where I can investigate alerts, tune rules, and communicate findings
+                to both technical staff and leadership in a clear, evidence-based manner.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- DOCS SECTION (SINGLE VIEWER WITH TABS + EXPAND) -->
+      <section class="section docs-section" id="docs">
+        <div class="section-header">
+          <div class="kicker">Embedded Project Documents</div>
+          <div class="section-title-row">
+            <h2>Project Slides and Written Reflection (Read-Only)</h2>
+            <span>Extended technical and reflective detail</span>
+          </div>
+        </div>
+        <div class="section-body">
+          <p class="docs-intro">
+            The documents below provide additional depth beyond this blog post. The slide deck summarizes
+            the environment, configuration steps, and key detections, while the written reflection expands
+            on lessons learned and how the project aligns with my professional goals. Both documents are
+            embedded in <strong>view-only mode</strong> to emphasize reading and review rather than file download.
+          </p>
+
+          <div class="docs-controls">
+            <button class="docs-toggle" id="docs-toggle">Expand documents</button>
+          </div>
+
+          <div class="docs-grid-outer" id="docs-grid-outer">
+            <div class="docs-viewer-card">
+              <div class="docs-tab-bar">
+                <button
+                  class="doc-tab active"
+                  data-src="docs/red-vs-blue-proxmox-lab-project.pdf#view=FitH&toolbar=0&navpanes=0&scrollbar=0"
+                  data-caption="Slide deck describing the Proxmox architecture, operating system configuration, Wazuh and Sysmon integration, and example alerts mapped to MITRE ATT&amp;CK techniques."
+                >
+                  Red vs Blue Proxmox Lab Project (Slides)
+                </button>
+                <button
+                  class="doc-tab"
+                  data-src="docs/red-vs-blue-reflection.pdf#view=FitH&toolbar=0&navpanes=0&scrollbar=0"
+                  data-caption="Written narrative reflection that documents challenges in networking and logging, synthesizes key learning outcomes, and connects the capstone directly to my career interests in cybersecurity and purple teaming."
+                >
+                  Final Phase Documentation (Reflection)
+                </button>
+              </div>
+
+              <div class="docs-viewer">
+                <iframe
+                  id="docs-iframe"
+                  src="docs/red-vs-blue-proxmox-lab-project.pdf#view=FitH&toolbar=0&navpanes=0&scrollbar=0"
+                  title="Project Documents Viewer"
+                ></iframe>
+              </div>
+
+              <div class="docs-caption" id="docs-caption">
+                Slide deck describing the Proxmox architecture, operating system configuration,
+                Wazuh and Sysmon integration, and example alerts mapped to MITRE ATT&amp;CK techniques.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GALLERY -->
+      <section class="section" id="gallery">
+        <div class="section-header">
+          <div class="kicker">Screenshots, Diagrams, and Visuals</div>
+          <div class="section-title-row">
+            <h2>Visual Tour of the Lab and Alerts</h2>
+            <span>Hover to preview • Click to open</span>
+          </div>
+        </div>
+
+        <div class="section-body">
+          <div class="gallery-grid">
+            <!-- Network Diagram -->
+            <div class="gallery-card" data-image="img/network-diagram.jpg"
+                 data-title="Team C Isolated Network Diagram"
+                 data-description="High-level view of the Proxmox environment, showing the VyOS router, pfSense firewall, Ubuntu Wazuh manager, and Windows 10 endpoint in an isolated network."
+                 data-extra="This diagram was the foundation for all routing and firewall decisions and ensured that the blue-team environment remained logically separated from other teams’ labs being attacked in the course.">
+              <div class="gallery-thumb">
+                <img src="img/network-diagram.jpg" alt="Isolated network diagram with VyOS, pfSense, Ubuntu, and Windows 10" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">Isolated Lab Topology</div>
+                    <div class="gallery-text-sub">Proxmox, VyOS, pfSense, Ubuntu, Windows 10</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>Overall layout of the Team C isolated network.</p>
+                <div class="gallery-detail">
+                  The diagram helped us reason about traffic flows, dependencies, and potential blind
+                  spots in our logging and firewall rules.
+                </div>
+              </div>
+            </div>
+
+            <!-- Wazuh Endpoints -->
+            <div class="gallery-card" data-image="img/wazuh-endpoints.jpg"
+                 data-title="Wazuh Endpoints View"
+                 data-description="Endpoints view confirming that the Windows 10 system is actively connected, grouped under the windows-sysmon group."
+                 data-extra="This view served as a quick health check before any analysis: if the agent was not present here, we knew that the downstream detections would not be reliable.">
+              <div class="gallery-thumb">
+                <img src="img/wazuh-endpoints.jpg" alt="Wazuh endpoints summary showing the Windows 10 agent" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">Endpoint Visibility</div>
+                    <div class="gallery-text-sub">Windows 10 agent registered in Wazuh</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>Agent status and grouping in Wazuh.</p>
+                <div class="gallery-detail">
+                  Confirming that the Windows host appeared in the correct group ensured that Sysmon
+                  events would be parsed against the right set of rules.
+                </div>
+              </div>
+            </div>
+
+            <!-- Sysmon Event Viewer -->
+            <div class="gallery-card" data-image="img/sysmon-eventviewer.jpg"
+                 data-title="Sysmon Operational Log"
+                 data-description="Windows Event Viewer showing Sysmon operational events, including process creations and terminations."
+                 data-extra="Reviewing the raw Windows log helped us bridge the gap between native Sysmon events and the normalized alerts displayed inside Wazuh.">
+              <div class="gallery-thumb">
+                <img src="img/sysmon-eventviewer.jpg" alt="Sysmon operational log in Windows Event Viewer" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">Raw Sysmon Events</div>
+                    <div class="gallery-text-sub">Event IDs prior to SIEM parsing</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>Sysmon events on the Windows endpoint.</p>
+                <div class="gallery-detail">
+                  Comparing this view with Wazuh alerts was essential for validating that important
+                  security-relevant activity was not being lost in translation.
+                </div>
+              </div>
+            </div>
+
+            <!-- Wazuh Alerts -->
+            <div class="gallery-card" data-image="img/wazuh-alerts.jpg"
+                 data-title="Wazuh Alerts – Malware-like File Drops"
+                 data-description="Threat-hunting view in Wazuh highlighting Rule 92213, flagging executable files dropped into directories commonly abused by malware."
+                 data-extra="This high-severity rule showed how a single suspicious file write can be escalated into an immediately actionable alert for defenders.">
+              <div class="gallery-thumb">
+                <img src="img/wazuh-alerts.jpg" alt="Wazuh alerts showing executable file dropped in malware common folder" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">Malicious File Drop Detection</div>
+                    <div class="gallery-text-sub">Rule 92213 firing on Sysmon EID 11</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>High-severity alerts captured in Wazuh.</p>
+                <div class="gallery-detail">
+                  This screenshot illustrates the connection between file system telemetry and
+                  higher-level detections mapped to Command and Control behaviors.
+                </div>
+              </div>
+            </div>
+
+            <!-- MITRE View -->
+            <div class="gallery-card" data-image="img/mitre-view.jpg"
+                 data-title="Wazuh MITRE ATT&amp;CK Mapping"
+                 data-description="Wazuh MITRE view where alerts are organized by tactic and technique IDs such as T1078 and T1105."
+                 data-extra="This perspective encouraged us to think beyond isolated alerts and to focus instead on how observations align with adversary objectives.">
+              <div class="gallery-thumb">
+                <img src="img/mitre-view.jpg" alt="Wazuh MITRE ATT&CK mapping view" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">MITRE ATT&amp;CK View</div>
+                    <div class="gallery-text-sub">Tactics and techniques mapped to alerts</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>MITRE ATT&amp;CK alignment for key rules.</p>
+                <div class="gallery-detail">
+                  Organizing alerts by tactic made it easier to explain risk and to discuss potential
+                  response actions with non-technical stakeholders.
+                </div>
+              </div>
+            </div>
+
+            <!-- Kali enumeration -->
+            <div class="gallery-card" data-image="img/kali-enum.jpg"
+                 data-title="Kali Enumeration Against Target Host"
+                 data-description="Kali terminal output from enumeration tools used against another team’s lab environment."
+                 data-extra="Although this activity occurred outside our own Proxmox network, it provided a concrete reference for the types of events and patterns we would expect to detect if similar enumeration occurred within our monitored environment.">
+              <div class="gallery-thumb">
+                <img src="img/kali-enum.jpg" alt="Kali enumeration of SMB shares and services" />
+                <div class="gallery-overlay">
+                  <div>
+                    <div class="gallery-text-main">Red-Team Enumeration</div>
+                    <div class="gallery-text-sub">Discovery phase in a peer team lab</div>
+                  </div>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p>Enumeration steps from the red-team side.</p>
+                <div class="gallery-detail">
+                  Linking these commands to expected telemetry completed the purple-team feedback loop
+                  between offensive behavior against other teams and defensive detection in our own lab.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FULLSCREEN MODAL -->
+      <div class="gallery-fullscreen" id="gallery-fullscreen">
+        <div class="gallery-fullscreen-inner">
+          <button class="fullscreen-close" id="fullscreen-close">Close</button>
+          <div class="gallery-fullscreen-img">
+            <img id="fullscreen-img" src="" alt="" />
+          </div>
+          <div class="gallery-fullscreen-meta">
+            <div>
+              <div class="badge-pill">Lab Screenshot</div>
+              <h3 id="fullscreen-title">Title</h3>
+              <p id="fullscreen-desc">Description</p>
+            </div>
+            <p id="fullscreen-extra"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer>
+        <div>
+          © <span id="year"></span> Dheeraj Kumar Ammineni  -  Purple Team Reflection Blog
+        </div>
+        <div>
+          Developed as part of the Red vs Blue capstone at Saint Louis University.
+          Connect with me on
+          <a href="https://www.linkedin.com/in/dheeraj-kumar-6528801a7" target="_blank">LinkedIn</a>.
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Year
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    // Gallery fullscreen
+    const fullscreen = document.getElementById("gallery-fullscreen");
+    const fullscreenImg = document.getElementById("fullscreen-img");
+    const fullscreenTitle = document.getElementById("fullscreen-title");
+    const fullscreenDesc = document.getElementById("fullscreen-desc");
+    const fullscreenExtra = document.getElementById("fullscreen-extra");
+    const closeBtn = document.getElementById("fullscreen-close");
+
+    document.querySelectorAll(".gallery-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        const img = card.getAttribute("data-image");
+        const title = card.getAttribute("data-title");
+        const desc = card.getAttribute("data-description");
+        const extra = card.getAttribute("data-extra");
+        fullscreenImg.src = img;
+        fullscreenImg.alt = title;
+        fullscreenTitle.textContent = title;
+        fullscreenDesc.textContent = desc;
+        fullscreenExtra.textContent = extra;
+        fullscreen.classList.add("open");
+      });
+    });
+
+    closeBtn.addEventListener("click", () => {
+      fullscreen.classList.remove("open");
+    });
+
+    fullscreen.addEventListener("click", (e) => {
+      if (e.target === fullscreen) {
+        fullscreen.classList.remove("open");
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape") {
+        fullscreen.classList.remove("open");
+      }
+    });
+
+    // Docs expand / collapse
+    const docsToggle = document.getElementById("docs-toggle");
+    const docsOuter = document.getElementById("docs-grid-outer");
+
+    docsToggle.addEventListener("click", () => {
+      docsOuter.classList.toggle("expanded");
+      if (docsOuter.classList.contains("expanded")) {
+        docsToggle.textContent = "Collapse documents";
+      } else {
+        docsToggle.textContent = "Expand documents";
+      }
+    });
+
+    // Docs tab switching
+    const docTabs = document.querySelectorAll(".doc-tab");
+    const docsIframe = document.getElementById("docs-iframe");
+    const docsCaption = document.getElementById("docs-caption");
+
+    docTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        docTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+        const src = tab.getAttribute("data-src");
+        const caption = tab.getAttribute("data-caption");
+        docsIframe.src = src;
+        docsCaption.innerHTML = caption;
+      });
+    });
+  </script>
+</body>
+</html>
